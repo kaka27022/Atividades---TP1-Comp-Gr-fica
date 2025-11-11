@@ -15,9 +15,13 @@ Os programas foram desenvolvidos com foco didático, servindo como base para que
 ## Autores
 
 [Maria Clara](https://github.com/kaka27022)
+
 [Niege Reis](https://github.com/niegereis)
+
 [Lourrane Lindsay](https://github.com/Lou-LAE)
+
 [Eduardo Silva](https://github.com/EduardoGPS-18)
+
 [Camila Aparecida](https://github.com/millow-w/)
 
 
