@@ -1,0 +1,3 @@
+/Users/nieg/Documents/ufop/comp-grafica/Atividades---TP1-Comp-Gr-fica/Modelo de Gouraud (Iluminacao por Vertices)/build/CMakeFiles/gouraud_shading.dir
+/Users/nieg/Documents/ufop/comp-grafica/Atividades---TP1-Comp-Gr-fica/Modelo de Gouraud (Iluminacao por Vertices)/build/CMakeFiles/edit_cache.dir
+/Users/nieg/Documents/ufop/comp-grafica/Atividades---TP1-Comp-Gr-fica/Modelo de Gouraud (Iluminacao por Vertices)/build/CMakeFiles/rebuild_cache.dir
