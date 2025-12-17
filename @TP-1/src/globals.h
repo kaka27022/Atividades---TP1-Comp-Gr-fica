@@ -35,7 +35,10 @@ extern std::vector<float> radii;        // Raios dos segmentos
 // Parâmetros de transformação
 extern float tx, ty;                     // Translação
 extern float angle;                      // Rotação (em graus)
-extern float scale;                      // Escala
+extern float scale;    
+extern float line_thickness_factor;   
+extern int thickness_level;
+                
 
 // Visualização incremental - arquivos parciais
 extern std::vector<std::string> growth_files;  // Lista de arquivos de crescimento

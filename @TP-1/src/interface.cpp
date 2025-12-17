@@ -15,10 +15,12 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <cmath>
 
 // ============================================================
 // TRANSFORMAÇÕES GEOMÉTRICAS (Matrizes Homogêneas 3x3)
 // ============================================================
+
 
 void applyTransform(Point2D& p) {
     // Matriz de transformação: T * R * S
@@ -55,6 +57,7 @@ OutCode computeOutCode(float x, float y) {
 }
 
 bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
+
     OutCode outcode0 = computeOutCode(x0, y0);
     OutCode outcode1 = computeOutCode(x1, y1);
     
@@ -70,7 +73,7 @@ bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
             break;
         } else {
             // Pelo menos um ponto está fora, calcular interseção
-            float x, y;
+            float x = 0.0f, y = 0.0f;
             OutCode outcodeOut = outcode0 ? outcode0 : outcode1;
             
             // Encontrar ponto de interseção
@@ -134,89 +137,160 @@ bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
 // ============================================================
 // DESENHO
 // ============================================================
-
 void drawTree() {
     if (points.empty() || lines.empty()) return;
 
-    // Calcular limites para recorte (janela centralizada menor que a viewport)
+    // ===============================
+    // NORMALIZAÇÃO AUTOMÁTICA DO RAIO
+    // ===============================
+    float min_r = 1e9f, max_r = -1e9f;
+
+    for (const auto& L : lines) {
+        if (L.radius < min_r) min_r = L.radius;
+        if (L.radius > max_r) max_r = L.radius;
+    }
+
+    float range_r = max_r - min_r;
+    if (range_r < 1e-6f) range_r = 1.0f;
+
+    // ===============================
+    // CÁLCULO DA JANELA DE RECORTE
+    // ===============================
     GLdouble modelview[16], projection[16];
     GLint viewport[4];
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
     glGetDoublev(GL_PROJECTION_MATRIX, projection);
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    // Converter limites da viewport para coordenadas do mundo
-    GLdouble x0, y0, z0, x1, y1, z1;
-    GLdouble center_x, center_y, center_z;
-    
-    // Canto inferior esquerdo
-    gluUnProject(0, 0, 0, modelview, projection, viewport, &x0, &y0, &z0);
-    // Canto superior direito
-    gluUnProject(window_width, window_height, 0, modelview, projection, viewport, &x1, &y1, &z1);
-    // Centro
-    gluUnProject(window_width/2.0, window_height/2.0, 0, modelview, projection, viewport, &center_x, &center_y, &center_z);
-    
-    // Calcular tamanho da viewport em coordenadas do mundo
-    float viewport_width = std::abs(x1 - x0);
-    float viewport_height = std::abs(y1 - y0);
-    
-    // Criar janela de recorte centralizada e menor
-    float clip_width = viewport_width * clip_size;
+    GLdouble x0p, y0p, z0p, x1p, y1p, z1p, center_x, center_y, center_z;
+
+    gluUnProject(0, 0, 0, modelview, projection, viewport, &x0p, &y0p, &z0p);
+    gluUnProject(window_width, window_height, 0, modelview, projection, viewport, &x1p, &y1p, &z1p);
+    gluUnProject(window_width / 2.0, window_height / 2.0, 0, modelview, projection, viewport,
+                &center_x, &center_y, &center_z);
+
+    float viewport_width  = std::abs(x1p - x0p);
+    float viewport_height = std::abs(y1p - y0p);
+
+    float clip_width  = viewport_width  * clip_size;
     float clip_height = viewport_height * clip_size;
-    
-    clip_xmin = center_x - clip_width / 2.0f;
-    clip_xmax = center_x + clip_width / 2.0f;
+
+    clip_xmin = center_x - clip_width  / 2.0f;
+    clip_xmax = center_x + clip_width  / 2.0f;
     clip_ymin = center_y - clip_height / 2.0f;
     clip_ymax = center_y + clip_height / 2.0f;
 
-    // Desenhar segmentos
-    glLineWidth(1.0f);
+    // ===============================
+    // DESENHAR ÁRVORE
+    // ===============================
     glBegin(GL_LINES);
-    
+
     int count = 0;
     for (size_t i = 0; i < lines.size() && count < n_segments_draw; i++) {
+        float x0 = 0.0f, x1 = 0.0f;
+        float y0 = 0.0f, y1 = 0.0f;
+
         Point2D p0 = points[lines[i].p0];
         Point2D p1 = points[lines[i].p1];
-        
-        // Aplicar transformações
+
         applyTransform(p0);
         applyTransform(p1);
-        
-        float x0 = p0.x, y0 = p0.y;
-        float x1 = p1.x, y1 = p1.y;
-        
-        // Aplicar recorte se habilitado
+
+        x0 = p0.x;
+        y0 = p0.y;
+        x1 = p1.x;
+        y1 = p1.y;
+
         bool draw = true;
-        if (clip_enabled) {
+        if (clip_enabled)
             draw = cohenSutherlandClip(x0, y0, x1, y1);
-        }
-        
+
         if (draw) {
-            // Cor baseada no raio (mais espesso = mais escuro)
-            float intensity = std::min(1.0f, lines[i].radius * 2.0f);
-            glColor3f(0.2f, 0.6f * intensity, 0.3f);
-            
+
+            // ===========================
+            // ESPESSURA DO TRAÇO (3 níveis)
+            // ===========================
+            float t_radius = (lines[i].radius - min_r) / range_r;
+            float base_thick = 0.4f + t_radius * 2.0f;
+
+            float multiplier =
+                (thickness_level == 0 ? 0.6f :
+                (thickness_level == 1 ? 1.0f :
+                                        1.6f)); // 0=fino, 1=médio, 2=grosso
+
+            float thickness = base_thick * multiplier;
+
+            glEnd();
+            glLineWidth(thickness);
+            glBegin(GL_LINES);
+
+            // ===========================
+            // COR: gradiente por nível
+            // ===========================
+            float t = (lines[i].radius - min_r) / range_r;
+            t = 1.0f - t; // menor raio = mais quente
+
+            int level = std::min(4, int(t * 5.0f));
+            float local_t = (t * 5.0f) - level;
+
+            float c0_r, c0_g, c0_b;
+            float c1_r, c1_g, c1_b;
+
+            switch (level) {
+            case 0: // vermelho → laranja
+                c0_r = 1.0f; c0_g = 0.0f;  c0_b = 0.0f;
+                c1_r = 1.0f; c1_g = 0.5f;  c1_b = 0.0f;
+                break;
+            case 1: // laranja → amarelo
+                c0_r = 1.0f; c0_g = 0.5f;  c0_b = 0.0f;
+                c1_r = 1.0f; c1_g = 1.0f;  c1_b = 0.0f;
+                break;
+            case 2: // amarelo → verde
+                c0_r = 1.0f; c0_g = 1.0f;  c0_b = 0.0f;
+                c1_r = 0.0f; c1_g = 1.0f;  c1_b = 0.0f;
+                break;
+            case 3: // verde → azul claro
+                c0_r = 0.0f; c0_g = 1.0f;  c0_b = 0.0f;
+                c1_r = 0.0f; c1_g = 0.8f;  c1_b = 1.0f;
+                break;
+            case 4: // azul claro → azul escuro
+            default:
+                c0_r = 0.0f; c0_g = 0.8f;  c0_b = 1.0f;
+                c1_r = 0.0f; c1_g = 0.2f;  c1_b = 0.6f;
+                break;
+            }
+
+            float r = c0_r * (1.0f - local_t) + c1_r * local_t;
+            float g = c0_g * (1.0f - local_t) + c1_g * local_t;
+            float b = c0_b * (1.0f - local_t) + c1_b * local_t;
+
+            glColor3f(r, g, b);
+
             glVertex2f(x0, y0);
             glVertex2f(x1, y1);
         }
-        
+
         count++;
     }
-    
+
     glEnd();
-    
-    // Desenhar retângulo de recorte se habilitado
+
+    // ===============================
+    // DESENHAR JANELA DE RECORTE
+    // ===============================
     if (clip_enabled) {
         glLineWidth(1.0f);
-        glColor3f(1.0f, 1.0f, 0.0f);  // Amarelo
+        glColor3f(1.0f, 1.0f, 0.0f);
         glLineStipple(1, 0xAAAA);
         glEnable(GL_LINE_STIPPLE);
+
         glBegin(GL_LINE_LOOP);
         glVertex2f(clip_xmin, clip_ymin);
         glVertex2f(clip_xmax, clip_ymin);
         glVertex2f(clip_xmax, clip_ymax);
         glVertex2f(clip_xmin, clip_ymax);
         glEnd();
+
         glDisable(GL_LINE_STIPPLE);
     }
 }
@@ -234,11 +308,13 @@ void displayText() {
     
     glColor3f(1.0f, 1.0f, 1.0f);
     
+    std::string thickness_labels[] = {"fino", "médio", "grosso"};
     std::string status = "tx=" + std::to_string(tx).substr(0, 4) + 
                         " ty=" + std::to_string(ty).substr(0, 4) +
                         " rot=" + std::to_string(angle).substr(0, 5) + "°" +
                         " scale=" + std::to_string(scale).substr(0, 4) +
                         " segs=" + std::to_string(n_segments_draw) + "/" + std::to_string(max_segments) +
+                        " thick=" + thickness_labels[thickness_level] +
                         " clip=" + (clip_enabled ? "ON" : "OFF");
     
     if (clip_enabled) {
@@ -248,7 +324,7 @@ void displayText() {
     // Adicionar informação de crescimento incremental
     if (growth_mode && growth_files.size() > 1) {
         status += " | Crescimento: " + std::to_string(current_growth_index + 1) + 
-                  "/" + std::to_string(growth_files.size());
+                "/" + std::to_string(growth_files.size());
         if (!growth_files.empty()) {
             std::string current_file = getFilename(growth_files[current_growth_index]);
             status += " [" + current_file + "]";
@@ -260,7 +336,7 @@ void displayText() {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
     }
     
-    std::string controls = "Controles: Setas(transl) r/R(rot) +/- (scale) c(clip) x/z(clip size) [](growth) PageUp/Down(segments)";
+    std::string controls = "Controles: Setas(transl) r/R(rot) +/-(scale) t/T(thick) c(clip) x/z(clip size) [](growth) PageUp/Down(segs)";
     glRasterPos2f(10, window_height - 40);
     for (char c : controls) {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
@@ -326,6 +402,7 @@ void init() {
     std::cout << "  Setas     - Translação (← → ↑ ↓)\n";
     std::cout << "  r/R       - Rotação (horário/anti-horário)\n";
     std::cout << "  +/-       - Escala (aumentar/diminuir)\n";
+    std::cout << "  t/T       - Espessura das linhas (fino/médio/grosso)\n";
     std::cout << "  c         - Toggle recorte (clipping)\n";
     std::cout << "  x/z       - Aumentar/diminuir tamanho da janela de recorte\n";
     std::cout << "  [/]       - Arquivo anterior/próximo de crescimento\n";

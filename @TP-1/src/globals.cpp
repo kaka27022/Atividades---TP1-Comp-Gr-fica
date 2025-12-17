@@ -16,7 +16,10 @@ std::vector<float> radii;          // Raios dos segmentos
 // Parâmetros de transformação
 float tx = 0.0f, ty = 0.0f;        // Translação
 float angle = 0.0f;                // Rotação (em graus)
-float scale = 12.0f;               // Escala
+float scale = 12.0f;   
+float line_thickness_factor = 1.0f;   // multiplicador da espessura
+int thickness_level = 2;              // 0=fino, 1=médio, 2=grosso
+
 
 // Visualização incremental - arquivos parciais
 std::vector<std::string> growth_files;  // Lista de arquivos de crescimento
@@ -35,4 +38,6 @@ float clip_size = 0.3f;  // Tamanho da janela de recorte (fração da viewport)
 // Dimensões da janela
 int window_width = 800;
 int window_height = 600;
+
+
 

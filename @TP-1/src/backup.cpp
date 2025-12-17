@@ -462,86 +462,99 @@ bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
 void drawTree() {
     if (points.empty() || lines.empty()) return;
 
-    // Calcular limites para recorte (janela centralizada menor que a viewport)
+    // ----- Cálculo dos limites para recorte -----
     GLdouble modelview[16], projection[16];
     GLint viewport[4];
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
     glGetDoublev(GL_PROJECTION_MATRIX, projection);
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    // Converter limites da viewport para coordenadas do mundo
     GLdouble x0, y0, z0, x1, y1, z1;
     GLdouble center_x, center_y, center_z;
-    
-    // Canto inferior esquerdo
+
+    // Unproject canto inferior
     gluUnProject(0, 0, 0, modelview, projection, viewport, &x0, &y0, &z0);
-    // Canto superior direito
+    // Unproject canto superior
     gluUnProject(window_width, window_height, 0, modelview, projection, viewport, &x1, &y1, &z1);
     // Centro
     gluUnProject(window_width/2.0, window_height/2.0, 0, modelview, projection, viewport, &center_x, &center_y, &center_z);
-    
-    // Calcular tamanho da viewport em coordenadas do mundo
-    float viewport_width = std::abs(x1 - x0);
+
+    // Dimensões em coordenadas do mundo
+    float viewport_width  = std::abs(x1 - x0);
     float viewport_height = std::abs(y1 - y0);
-    
-    // Criar janela de recorte centralizada e menor
-    float clip_width = viewport_width * clip_size;
+
+    // Janela de recorte
+    float clip_width  = viewport_width  * clip_size;
     float clip_height = viewport_height * clip_size;
-    
-    clip_xmin = center_x - clip_width / 2.0f;
-    clip_xmax = center_x + clip_width / 2.0f;
+
+    clip_xmin = center_x - clip_width  / 2.0f;
+    clip_xmax = center_x + clip_width  / 2.0f;
     clip_ymin = center_y - clip_height / 2.0f;
     clip_ymax = center_y + clip_height / 2.0f;
 
-    // Desenhar segmentos
-    glLineWidth(1.0f);
-    glBegin(GL_LINES);
-    
+    // ---------------- DESENHO DA ÁRVORE ------------------
+
     int count = 0;
+
     for (size_t i = 0; i < lines.size() && count < n_segments_draw; i++) {
+
         Point2D p0 = points[lines[i].p0];
         Point2D p1 = points[lines[i].p1];
-        
-        // Aplicar transformações
+
         applyTransform(p0);
         applyTransform(p1);
-        
-        float x0 = p0.x, y0 = p0.y;
-        float x1 = p1.x, y1 = p1.y;
-        
-        // Aplicar recorte se habilitado
+
+        float x0f = p0.x, y0f = p0.y;
+        float x1f = p1.x, y1f = p1.y;
+
         bool draw = true;
         if (clip_enabled) {
-            float orig_x0 = x0, orig_y0 = y0, orig_x1 = x1, orig_y1 = y1;
-            draw = cohenSutherlandClip(x0, y0, x1, y1);
+            draw = cohenSutherlandClip(x0f, y0f, x1f, y1f);
         }
-        
+
         if (draw) {
-            // Cor baseada no raio (mais espesso = mais escuro)
-            float intensity = std::min(1.0f, lines[i].radius * 2.0f);
-            glColor3f(0.2f, 0.6f * intensity, 0.3f);
-            
-            glVertex2f(x0, y0);
-            glVertex2f(x1, y1);
+
+            // ---------- ESPESSURA FINAL DO TRAÇO ----------
+            float base_thickness = 1.0f + lines[i].radius * 8.0f;
+
+            // 🔥 Este fator é controlado pelo teclado (T e G)
+            float final_thickness = base_thickness * line_thickness_factor;
+
+            glLineWidth(final_thickness);
+
+            // ---------- COR (degradê pelo radius) ----------
+            float r = lines[i].radius;  
+            float t = std::min(1.0f, r * 4.0f);
+
+            float R = 1.0f * (1.0 - t) + 0.2f * t;
+            float G = 0.2f * (1.0 - t) + 0.6f * t;
+            float B = 0.2f * (1.0 - t) + 1.0f * t;
+
+            glColor3f(R, G, B);
+
+            glBegin(GL_LINES);
+            glVertex2f(x0f, y0f);
+            glVertex2f(x1f, y1f);
+            glEnd();
         }
-        
+
         count++;
     }
-    
-    glEnd();
-    
-    // Desenhar retângulo de recorte se habilitado
+
+    // ---- Desenhar janela de recorte ----
     if (clip_enabled) {
         glLineWidth(1.0f);
-        glColor3f(1.0f, 1.0f, 0.0f);  // Amarelo
+        glColor3f(1.0f, 1.0f, 0.0f);
         glLineStipple(1, 0xAAAA);
         glEnable(GL_LINE_STIPPLE);
+
         glBegin(GL_LINE_LOOP);
         glVertex2f(clip_xmin, clip_ymin);
         glVertex2f(clip_xmax, clip_ymin);
         glVertex2f(clip_xmax, clip_ymax);
         glVertex2f(clip_xmin, clip_ymax);
         glEnd();
+
         glDisable(GL_LINE_STIPPLE);
     }
 }
@@ -639,70 +652,97 @@ void reshape(int w, int h) {
 // ============================================================
 
 void keyboard(unsigned char key, int, int) {
-    float step = 0.1f;
     float rot_step = 5.0f;
-    
+
     switch (key) {
-        case 'r':
-            angle += rot_step;
-            break;
-        case 'R':
+
+        // --- Rotação ---
+        case 'r':  // horário
             angle -= rot_step;
             break;
+
+        case 'R':  // anti-horário
+            angle += rot_step;
+            break;
+
+        // --- Zoom ---
         case '+':
         case '=':
             scale *= 1.1f;
             break;
+
         case '-':
         case '_':
             scale /= 1.1f;
             break;
+
+        // --- Ativar/desativar recorte ---
         case 'c':
         case 'C':
             clip_enabled = !clip_enabled;
             break;
+
+        // --- Ajustar tamanho da janela de recorte ---
         case 'x':
         case 'X':
-            // Aumentar tamanho da janela de recorte
             clip_size = std::min(1.0f, clip_size + 0.1f);
             break;
+
         case 'z':
         case 'Z':
-            // Diminuir tamanho da janela de recorte
             clip_size = std::max(0.1f, clip_size - 0.1f);
             break;
+
+        // --- Troca de arquivos de crescimento ---
         case '[':
-            // Arquivo anterior de crescimento
             if (growth_mode && growth_files.size() > 1) {
                 current_growth_index--;
-                if (current_growth_index < 0) {
+                if (current_growth_index < 0)
                     current_growth_index = growth_files.size() - 1;
-                }
                 loadCurrentGrowthFile();
             }
             break;
+
         case ']':
-            // Próximo arquivo de crescimento
             if (growth_mode && growth_files.size() > 1) {
                 current_growth_index++;
-                if (current_growth_index >= (int)growth_files.size()) {
+                if (current_growth_index >= (int)growth_files.size())
                     current_growth_index = 0;
-                }
                 loadCurrentGrowthFile();
             }
             break;
+
+        // --- Reset total ---
         case ' ':
-            // Reset
             tx = ty = 0.0f;
             angle = 0.0f;
             scale = 1.0f;
             n_segments_draw = max_segments;
+
+            // reset da espessura
+            thickness_level = 2; // média
             break;
-        case 27:  // ESC
+
+        // ===========================================
+        // >>> ESPESSURA DO TRAÇO — apenas T e G <<<
+        // ===========================================
+
+        case 't':   // Aumenta espessura
+            line_thickness_factor *= 1.1f;
+            break;
+
+        case 'g':   // Diminui espessura
+            line_thickness_factor /= 1.1f;
+            if (line_thickness_factor < 0.1f)
+                line_thickness_factor = 0.1f;
+            break;
+
+        // --- Sair ---
+        case 27: // ESC
             exit(0);
             break;
     }
-    
+
     glutPostRedisplay();
 }
 

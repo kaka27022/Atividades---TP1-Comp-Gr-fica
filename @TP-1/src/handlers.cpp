@@ -51,6 +51,14 @@ void keyboard(unsigned char key, int, int) {
             // Diminuir tamanho da janela de recorte
             clip_size = std::max(0.1f, clip_size - 0.1f);
             break;
+        case 't':
+            // Aumentar nível de espessura
+            thickness_level = std::min(2, thickness_level + 1);
+            break;
+        case 'T':
+            // Diminuir nível de espessura
+            thickness_level = std::max(0, thickness_level - 1);
+            break;
         case '[':
             // Arquivo anterior de crescimento
             if (growth_mode && growth_files.size() > 1) {
