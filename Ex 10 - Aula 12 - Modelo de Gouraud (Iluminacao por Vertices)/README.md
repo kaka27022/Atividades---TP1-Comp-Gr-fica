@@ -4,12 +4,12 @@ Este projeto implementa o cálculo de normais por vértice para habilitar o Gour
 
 ## Objetivos Implementados
 
-✅ **Passo 1**: Carregamento/Definição de Malha - Implementadas malhas simples (cubo e octaedro)  
-✅ **Passo 2**: Cálculo de Normais de Face - Via produto vetorial e normalização  
-✅ **Passo 3**: Cálculo de Normais de Vértice - Soma das normais de faces adjacentes  
-✅ **Passo 4**: Normalização - Normalização dos vetores resultantes  
-✅ **Passo 5**: Renderização - Uso de `glNormal3fv()` antes de `glVertex3fv()`  
-✅ **Teste**: Comparação entre `GL_SMOOTH` (Gouraud) e `GL_FLAT` (Flat Shading)
+**Passo 1**: Carregamento/Definição de Malha - Implementadas malhas simples (cubo e octaedro)  
+**Passo 2**: Cálculo de Normais de Face - Via produto vetorial e normalização  
+**Passo 3**: Cálculo de Normais de Vértice - Soma das normais de faces adjacentes  
+**Passo 4**: Normalização - Normalização dos vetores resultantes  
+**Passo 5**: Renderização - Uso de `glNormal3fv()` antes de `glVertex3fv()`  
+**Teste**: Comparação entre `GL_SMOOTH` (Gouraud) e `GL_FLAT` (Flat Shading)
 
 ## Estrutura do Projeto
 
