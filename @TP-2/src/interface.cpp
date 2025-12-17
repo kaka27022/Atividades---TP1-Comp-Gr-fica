@@ -15,12 +15,12 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <cmath>
 
 // ============================================================
 // TRANSFORMAÇÕES GEOMÉTRICAS (Matrizes Homogêneas 3x3)
 // ============================================================
 
-#define M_PI 3.14159265358979323846
 
 void applyTransform(Point2D& p) {
     // Matriz de transformação: T * R * S
