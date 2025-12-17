@@ -57,6 +57,7 @@ OutCode computeOutCode(float x, float y) {
 }
 
 bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
+
     OutCode outcode0 = computeOutCode(x0, y0);
     OutCode outcode1 = computeOutCode(x1, y1);
     
@@ -72,7 +73,7 @@ bool cohenSutherlandClip(float& x0, float& y0, float& x1, float& y1) {
             break;
         } else {
             // Pelo menos um ponto está fora, calcular interseção
-            float x, y;
+            float x = 0.0f, y = 0.0f;
             OutCode outcodeOut = outcode0 ? outcode0 : outcode1;
             
             // Encontrar ponto de interseção
@@ -186,6 +187,8 @@ void drawTree() {
 
     int count = 0;
     for (size_t i = 0; i < lines.size() && count < n_segments_draw; i++) {
+        float x0 = 0.0f, x1 = 0.0f;
+        float y0 = 0.0f, y1 = 0.0f;
 
         Point2D p0 = points[lines[i].p0];
         Point2D p1 = points[lines[i].p1];
@@ -193,8 +196,10 @@ void drawTree() {
         applyTransform(p0);
         applyTransform(p1);
 
-        float x0 = p0.x, y0 = p0.y;
-        float x1 = p1.x, y1 = p1.y;
+        x0 = p0.x;
+        y0 = p0.y;
+        x1 = p1.x;
+        y1 = p1.y;
 
         bool draw = true;
         if (clip_enabled)
