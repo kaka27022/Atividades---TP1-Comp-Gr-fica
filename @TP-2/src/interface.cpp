@@ -303,11 +303,13 @@ void displayText() {
     
     glColor3f(1.0f, 1.0f, 1.0f);
     
+    std::string thickness_labels[] = {"fino", "médio", "grosso"};
     std::string status = "tx=" + std::to_string(tx).substr(0, 4) + 
                         " ty=" + std::to_string(ty).substr(0, 4) +
                         " rot=" + std::to_string(angle).substr(0, 5) + "°" +
                         " scale=" + std::to_string(scale).substr(0, 4) +
                         " segs=" + std::to_string(n_segments_draw) + "/" + std::to_string(max_segments) +
+                        " thick=" + thickness_labels[thickness_level] +
                         " clip=" + (clip_enabled ? "ON" : "OFF");
     
     if (clip_enabled) {
@@ -329,7 +331,7 @@ void displayText() {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
     }
     
-    std::string controls = "Controles: Setas(transl) r/R(rot) +/- (scale) c(clip) x/z(clip size) [](growth) PageUp/Down(segments)";
+    std::string controls = "Controles: Setas(transl) r/R(rot) +/-(scale) t/T(thick) c(clip) x/z(clip size) [](growth) PageUp/Down(segs)";
     glRasterPos2f(10, window_height - 40);
     for (char c : controls) {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
@@ -395,6 +397,7 @@ void init() {
     std::cout << "  Setas     - Translação (← → ↑ ↓)\n";
     std::cout << "  r/R       - Rotação (horário/anti-horário)\n";
     std::cout << "  +/-       - Escala (aumentar/diminuir)\n";
+    std::cout << "  t/T       - Espessura das linhas (fino/médio/grosso)\n";
     std::cout << "  c         - Toggle recorte (clipping)\n";
     std::cout << "  x/z       - Aumentar/diminuir tamanho da janela de recorte\n";
     std::cout << "  [/]       - Arquivo anterior/próximo de crescimento\n";

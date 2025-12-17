@@ -720,7 +720,7 @@ void keyboard(unsigned char key, int, int) {
             n_segments_draw = max_segments;
 
             // reset da espessura
-            thickness_level = 1; // média
+            thickness_level = 2; // média
             break;
 
         // ===========================================

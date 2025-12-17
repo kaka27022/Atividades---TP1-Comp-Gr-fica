@@ -18,7 +18,7 @@ float tx = 0.0f, ty = 0.0f;        // Translação
 float angle = 0.0f;                // Rotação (em graus)
 float scale = 12.0f;   
 float line_thickness_factor = 1.0f;   // multiplicador da espessura
-int thickness_level = 1;              // 0=fino, 1=médio, 2=grosso
+int thickness_level = 2;              // 0=fino, 1=médio, 2=grosso
 
 
 // Visualização incremental - arquivos parciais
