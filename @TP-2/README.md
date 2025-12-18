@@ -67,6 +67,7 @@ O programa detecta automaticamente arquivos de crescimento na mesma série (arqu
 | **x / z** | Aumentar / diminuir tamanho da janela de recorte |
 | **[ / ]** | Arquivo anterior / próximo de crescimento |
 | **PageUp / PageDown** | Incrementar / decrementar segmentos visíveis |
+| **T / t**| Aumentar / diminui espessura | 
 | **ESPAÇO** | Resetar todas as transformações |
 | **ESC** | Sair do programa |
 
