@@ -149,7 +149,11 @@ void setupLightingPhong(const Point3D& vertex, const Point3D& normal, const Poin
     g = std::min(1.0f, std::max(0.0f, g));
     b = std::min(1.0f, std::max(0.0f, b));
     
-    glColor3f(r, g, b);
+    if (transparency_enabled) {
+        glColor4f(r, g, b, transparency_alpha);
+    } else {
+        glColor3f(r, g, b);
+    }
 }
 
 void setupLightingPhong(const Point3D& vertex, const Point3D& normal, const Point3D& eye) {
@@ -188,7 +192,11 @@ void setupLightingPhong(const Point3D& vertex, const Point3D& normal, const Poin
     g = std::min(1.0f, std::max(0.0f, g));
     b = std::min(1.0f, std::max(0.0f, b));
     
-    glColor3f(r, g, b);
+    if (transparency_enabled) {
+        glColor4f(r, g, b, transparency_alpha);
+    } else {
+        glColor3f(r, g, b);
+    }
 }
 
 // ============================================================
@@ -256,7 +264,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
                 }
             }
         } else if (use_custom_color) {
-            glColor3f(base_r, base_g, base_b);
+            if (transparency_enabled) {
+                glColor4f(base_r, base_g, base_b, transparency_alpha);
+            } else {
+                glColor3f(base_r, base_g, base_b);
+            }
         }
         
         glNormal3f(normal.x, normal.y, normal.z);
@@ -269,7 +281,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
                 setupLightingPhong(vertex1, normal, camera.eye);
             }
         } else if (use_custom_color) {
-            glColor3f(base_r, base_g, base_b);
+            if (transparency_enabled) {
+                glColor4f(base_r, base_g, base_b, transparency_alpha);
+            } else {
+                glColor3f(base_r, base_g, base_b);
+            }
         }
         glNormal3f(normal.x, normal.y, normal.z);
         glVertex3f(vertex1.x, vertex1.y, vertex1.z);
@@ -295,7 +311,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
             }
         }
     } else if (use_custom_color) {
-        glColor3f(base_r, base_g, base_b);
+        if (transparency_enabled) {
+            glColor4f(base_r, base_g, base_b, transparency_alpha);
+        } else {
+            glColor3f(base_r, base_g, base_b);
+        }
     }
     glNormal3f(normal0.x, normal0.y, normal0.z);
     glVertex3f(p0.x, p0.y, p0.z);
@@ -309,7 +329,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
                 setupLightingPhong(base0[idx], normal0, camera.eye);
             }
         } else if (use_custom_color) {
-            glColor3f(base_r, base_g, base_b);
+            if (transparency_enabled) {
+                glColor4f(base_r, base_g, base_b, transparency_alpha);
+            } else {
+                glColor3f(base_r, base_g, base_b);
+            }
         }
         glNormal3f(normal0.x, normal0.y, normal0.z);
         glVertex3f(base0[idx].x, base0[idx].y, base0[idx].z);
@@ -334,7 +358,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
             }
         }
     } else if (use_custom_color) {
-        glColor3f(base_r, base_g, base_b);
+        if (transparency_enabled) {
+            glColor4f(base_r, base_g, base_b, transparency_alpha);
+        } else {
+            glColor3f(base_r, base_g, base_b);
+        }
     }
     glNormal3f(normal1.x, normal1.y, normal1.z);
     glVertex3f(p1.x, p1.y, p1.z);
@@ -348,7 +376,11 @@ void drawCylinder(const Point3D& p0, const Point3D& p1, float radius, int segmen
                 setupLightingPhong(base1[idx], normal1, camera.eye);
             }
         } else if (use_custom_color) {
-            glColor3f(base_r, base_g, base_b);
+            if (transparency_enabled) {
+                glColor4f(base_r, base_g, base_b, transparency_alpha);
+            } else {
+                glColor3f(base_r, base_g, base_b);
+            }
         }
         glNormal3f(normal1.x, normal1.y, normal1.z);
         glVertex3f(base1[idx].x, base1[idx].y, base1[idx].z);
@@ -367,9 +399,10 @@ void drawTree3D() {
     if (transparency_enabled) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(1.0f, 1.0f, 1.0f, transparency_alpha);
+        glDepthMask(GL_FALSE);  // Permitir que objetos transparentes sejam desenhados corretamente
     } else {
         glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);   // Habilitar write no depth buffer quando não transparente
     }
     
     // Normalizar raios para visualização (para o gradiente de cores)
@@ -421,6 +454,10 @@ void drawTree3D() {
             float target_avg_radius = data_scale * 0.003f;
             
             if (avg_radius > 0.0001f) {
+                // IMPORTANTE: Usar sempre o avg_radius original como referência para manter
+                // a mesma escala visual entre os dois modos, permitindo comparar facilmente
+                // No modo fixo, depois de escalar todos ficam iguais
+                // No modo variável, depois de escalar as diferenças são preservadas proporcionalmente
                 float scale_factor = target_avg_radius / avg_radius;
                 // Limitar escala entre 0.8x e 4x para evitar distorções extremas
                 if (scale_factor < 0.8f) scale_factor = 0.8f;
@@ -436,10 +473,19 @@ void drawTree3D() {
         }
         
         // Garantir limites mínimos e máximos baseados no tamanho dos dados
-        // Limites muito reduzidos para cilindros extremamente finos
+        // IMPORTANTE: No modo variável, ampliar a faixa de raios para tornar as diferenças mais visíveis
         float min_radius = data_scale * 0.001f;   // Mínimo: 0.1% do tamanho
-        float max_radius = data_scale * 0.012f;    // Máximo: 1.2% do tamanho
+        float max_radius;
         
+        if (radius_mode_fixed) {
+            // No modo fixo: limite máximo mais restrito (todos ficam uniformes)
+            max_radius = data_scale * 0.012f;    // Máximo: 1.2% do tamanho
+        } else {
+            // No modo variável: limite máximo maior para preservar diferenças
+            max_radius = data_scale * 0.020f;    // Máximo: 2.0% do tamanho (maior para mostrar variação)
+        }
+        
+        // Aplicar limites
         if (display_radius < min_radius) display_radius = min_radius;
         if (display_radius > max_radius) display_radius = max_radius;
         
@@ -458,9 +504,10 @@ void drawTree3D() {
         count++;
     }
     
-    // Desabilitar blend se estava habilitado
+    // Restaurar estado do depth buffer se estava desabilitado
     if (transparency_enabled) {
-        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);  // Restaurar write no depth buffer
+        // NÃO desabilitar GL_BLEND aqui - será usado se houver outros objetos transparentes
     }
 }
 

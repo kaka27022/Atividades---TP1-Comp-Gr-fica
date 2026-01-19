@@ -85,7 +85,8 @@ void keyboard(unsigned char key, int, int) {
         case 'T':
             // Toggle transparência
             transparency_enabled = !transparency_enabled;
-            std::cout << "Transparência: " << (transparency_enabled ? "ON" : "OFF") << std::endl;
+            std::cout << ">>> T pressionado - Transparência: " << (transparency_enabled ? "ON" : "OFF") << std::endl;
+            glutPostRedisplay();
             break;
         case '[':
             // Arquivo anterior de crescimento
@@ -144,11 +145,28 @@ void keyboard(unsigned char key, int, int) {
             }
             break;
         case 'r':
-        case 'R':
+        case 'R': {
             // Toggle modo de raio (fixo/variável)
             radius_mode_fixed = !radius_mode_fixed;
-            std::cout << "Modo de raio: " << (radius_mode_fixed ? "FIXO" : "VARIÁVEL") << std::endl;
+            std::cout << ">>> R pressionado - Modo de raio: " << (radius_mode_fixed ? "FIXO" : "VARIÁVEL") << std::endl;
+            // Calcular e mostrar estatísticas dos raios
+            float min_r = 1e9f, max_r = -1e9f;
+            for (const auto& L : lines) {
+                if (L.radius < min_r) min_r = L.radius;
+                if (L.radius > max_r) max_r = L.radius;
+            }
+            float avg_r = (min_r + max_r) / 2.0f;
+            float range_r = max_r - min_r;
+            std::cout << "    Raios originais - Mín: " << min_r << ", Máx: " << max_r 
+                      << ", Média: " << avg_r << ", Faixa: " << range_r << std::endl;
+            if (radius_mode_fixed) {
+                std::cout << "    ✓ Todos os segmentos usarão raio fixo: " << avg_r << std::endl;
+            } else {
+                std::cout << "    ✓ Segmentos usarão raios variáveis (0.145 a 1.226)" << std::endl;
+            }
+            glutPostRedisplay();
             break;
+        }
         case ' ':
             // Reset câmera
             camera.distance = 10.0f;
