@@ -72,7 +72,7 @@ O programa detecta automaticamente arquivos de crescimento na mesma série (arqu
 | **S** | Zoom out (afastar - aumenta 10% da distância) |
 | **Q / E** | Rotação horizontal (azimuth) - / + |
 | **A / D** | Rotação vertical (elevation) - / + |
-| **ESPAÇO** | Resetar câmera para posição inicial |
+| **ESPAÇO** | Resetar câmera (distância, ângulos e centro padrão), restaurar todos os segmentos visíveis e limpar seleção |
 
 #### Iluminação e Visualização
 
@@ -140,21 +140,19 @@ Os ramos arteriais são modelados como cilindros 3D conectando os pontos. Cada c
 
 #### Modo Variável (padrão)
 - Cada segmento mantém seu raio original do arquivo VTK
-- Preserva as diferenças de espessura entre ramos
-- Limite máximo ampliado (2.0% do tamanho dos dados) para melhor visualização das diferenças
+- Preserva as diferenças de espessura entre ramos (tronco mais grosso, ramos finos)
+- Escala: raio máximo do tronco em ~2.5% do tamanho da cena; limites entre 0.15% e 4% do `data_scale`
 
 #### Modo Fixo
 - Todos os segmentos usam o mesmo raio (raio médio calculado dos dados)
 - Uniformiza a espessura de todos os ramos
 - Útil para visualizar a estrutura geométrica sem variações de espessura
-- Limite máximo padrão (1.2% do tamanho dos dados)
+- Usa a mesma escala do modo variável (referência 2.5%, limites 0.15%–4%)
 
 ### Gradiente de Cores
 
-O gradiente de cores é aplicado com base no raio normalizado de cada segmento:
-- **Azul** (RGB: 0, 0, 1): Raio mínimo
-- **Ciano → Verde → Amarelo → Laranja**: Valores intermediários
-- **Vermelho** (RGB: 1, 0, 0): Raio máximo
+O gradiente de cores é aplicado com base no raio normalizado de cada segmento (0 a 1):
+- **Azul** (raios pequenos) → **Ciano** → **Verde** → **Amarelo** → **Laranja** → **Vermelho** (raios grandes)
 
 O gradiente é calculado mesmo no modo fixo (usa o raio original para a cor), mas todos os segmentos terão o mesmo tamanho visual.
 
@@ -196,7 +194,7 @@ eye.y = center.y + distance * sin(elevation)
 eye.z = center.z + distance * cos(elevation) * sin(azimuth)
 ```
 
-**Importante**: A posição da câmera é preservada ao navegar entre arquivos de crescimento usando as teclas `[` e `]`, permitindo manter o mesmo ponto de vista durante a navegação.
+**Importante**: A posição da câmera é preservada ao navegar entre arquivos de crescimento usando as teclas `[` e `]`, permitindo manter o mesmo ponto de vista durante a navegação. A tecla ESPAÇO reseta a câmera para distância 10, azimuth 45°, elevação 30° e centro (0,0,0), além de restaurar todos os segmentos visíveis e limpar a seleção.
 
 ### Transparência e Z-Buffer
 
@@ -278,7 +276,7 @@ O sistema detecta automaticamente o sistema operacional durante a compilação v
 - O Z-buffer garante que objetos mais próximos sejam renderizados sobre os mais distantes
 - O zoom é proporcional (10% de mudança por tecla W/S) para melhor controle
 - A câmera é preservada ao navegar entre arquivos para manter a mesma perspectiva
-- Os raios são escalados automaticamente para garantir visibilidade mantendo proporções
+- Os raios são escalados automaticamente: o raio máximo do tronco é referência em ~2,5% do tamanho da cena (`data_scale`), com limites entre 0,15% e 4%, mantendo as proporções entre modos fixo e variável
 
 ## Notas de Desenvolvimento
 
