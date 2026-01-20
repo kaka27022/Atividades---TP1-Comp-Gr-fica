@@ -441,51 +441,26 @@ void drawTree3D() {
             segment_radius = lines[i].radius;
         }
         
-        // Aplicar um fator de escala simples e proporcional ao tamanho dos dados
-        // para garantir visibilidade mantendo as proporções
+        // Escala dos raios para corresponder aos exemplos Nterm:
+        // - Modo FIXO: todos os segmentos com a mesma espessura (raio médio), tubos com espessura uniforme
+        // - Modo VARIÁVEL: espessura proporcional ao raio do VTK (tronco grosso, ramos finos)
+        // Referência: raio máximo do tronco em ~2.5% do data_scale (tubos mais finos)
         
         float display_radius = segment_radius;
         
-        // Escala simples: usar uma porcentagem fixa do tamanho dos dados como referência
-        // e aplicar um multiplicador aos raios originais
         if (data_scale > 0.001f) {
-            // Escalar raios para ficarem proporcionais e visíveis
-            // Fator de escala adaptado: fazer com que raio médio fique em ~0.3% do tamanho (extremamente fino)
-            float target_avg_radius = data_scale * 0.003f;
-            
-            if (avg_radius > 0.0001f) {
-                // IMPORTANTE: Usar sempre o avg_radius original como referência para manter
-                // a mesma escala visual entre os dois modos, permitindo comparar facilmente
-                // No modo fixo, depois de escalar todos ficam iguais
-                // No modo variável, depois de escalar as diferenças são preservadas proporcionalmente
-                float scale_factor = target_avg_radius / avg_radius;
-                // Limitar escala entre 0.8x e 4x para evitar distorções extremas
-                if (scale_factor < 0.8f) scale_factor = 0.8f;
-                if (scale_factor > 4.0f) scale_factor = 4.0f;
-                display_radius *= scale_factor;
-            } else {
-                // Se não conseguir calcular avg_radius, usar escala fixa muito pequena
-                display_radius *= 1.2f;
+            float ref_r = (max_r > 0.0001f) ? max_r : avg_radius;
+            if (ref_r > 0.0001f) {
+                // Fator para que o raio MÁXIMO fique em ~2.5% do tamanho da cena
+                float scale_factor = (data_scale * 0.025f) / ref_r;
+                display_radius = segment_radius * scale_factor;
             }
-        } else {
-            // Fallback: escala fixa muito pequena
-            display_radius *= 1.2f;
         }
         
-        // Garantir limites mínimos e máximos baseados no tamanho dos dados
-        // IMPORTANTE: No modo variável, ampliar a faixa de raios para tornar as diferenças mais visíveis
-        float min_radius = data_scale * 0.001f;   // Mínimo: 0.1% do tamanho
-        float max_radius;
+        // Limites de segurança (tubos visíveis, sem extremos)
+        float min_radius = data_scale * 0.0015f;  // Mínimo: 0.15% do tamanho
+        float max_radius = data_scale * 0.04f;    // Máximo: 4% do tamanho (preserva proporção tronco/ramos)
         
-        if (radius_mode_fixed) {
-            // No modo fixo: limite máximo mais restrito (todos ficam uniformes)
-            max_radius = data_scale * 0.012f;    // Máximo: 1.2% do tamanho
-        } else {
-            // No modo variável: limite máximo maior para preservar diferenças
-            max_radius = data_scale * 0.020f;    // Máximo: 2.0% do tamanho (maior para mostrar variação)
-        }
-        
-        // Aplicar limites
         if (display_radius < min_radius) display_radius = min_radius;
         if (display_radius > max_radius) display_radius = max_radius;
         
