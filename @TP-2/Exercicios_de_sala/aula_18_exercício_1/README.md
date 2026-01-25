@@ -13,6 +13,3 @@ Abra o terminal na pasta do projeto e use os comandos:
 2.**Executar:**
 
     make run
-
-![alt text](image.png)
-![alt text](image-1.png)
