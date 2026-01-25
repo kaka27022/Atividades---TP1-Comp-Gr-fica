@@ -8,7 +8,7 @@ Abra o terminal na pasta do projeto e use os comandos:
 
 1. **Compilar:**
 
-   make
+     make
 
 2.**Executar:**
 
@@ -16,3 +16,4 @@ Abra o terminal na pasta do projeto e use os comandos:
 
 ![alt text](image.png)
 ![alt text](image-1.png)
+
