@@ -68,7 +68,7 @@ O programa detecta automaticamente arquivos de crescimento na mesma série (arqu
 | Tecla | Ação |
 |-------|------|
 | **Mouse Arrastar** | Rotacionar câmera (azimuth/elevation) |
-| **W** | Zoom in (aproximar - reduz 10% da distância) |
+| **w** | Zoom in (aproximar - reduz 10% da distância) |
 | **S** | Zoom out (afastar - aumenta 10% da distância) |
 | **Q / E** | Rotação horizontal (azimuth) - / + |
 | **A / D** | Rotação vertical (elevation) - / + |
