@@ -8,11 +8,11 @@ No terminal (dentro da pasta do projeto):
 1. **Para compilar:**
     ```bash
    make
-    '''
+'''
 2. **Para executar:**
     ```bash
    make run
-    ''' 
+''' 
 
 🎮 **Comandos de Uso (Teclas)**
 Para interagir com o cubo e observar o descarte de faces, utilize as seguintes teclas:
